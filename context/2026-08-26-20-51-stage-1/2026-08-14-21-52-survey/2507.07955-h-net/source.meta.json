@@ -1,0 +1,9 @@
+{
+  "identifier": "arXiv:2507.07955",
+  "title": "Dynamic Chunking for End-to-End Hierarchical Sequence Modeling",
+  "source_url": "https://arxiv.org/abs/2507.07955",
+  "pdf_pages": 39,
+  "source_text_encoding": "UTF-8",
+  "extraction_method": "pre-existing PDF-to-text extraction; extractor not recorded",
+  "index_reliable": true
+}

@@ -1,0 +1,9 @@
+{
+  "identifier": "arXiv:2412.09871",
+  "title": "Byte Latent Transformer: Patches Scale Better Than Tokens",
+  "source_url": "https://arxiv.org/abs/2412.09871",
+  "pdf_pages": 27,
+  "source_text_encoding": "UTF-8",
+  "extraction_method": "pre-existing PDF-to-text extraction; extractor not recorded",
+  "index_reliable": true
+}
