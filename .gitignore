@@ -216,15 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-<<<<<<< HEAD
 
-# --- Local workspace: do not commit ---
-# .mcp.json contains plaintext credentials (APIFY_TOKEN / AWS_SECRET_ACCESS_KEY /
-# BRAVE_API_KEY / RUNPOD_API_KEY / SS_API_KEY); must remain ignored
+# Local workspace
 .mcp.json
 .claude/
 .codex/
-.sessions.md
-.context/
-=======
->>>>>>> 2425f9623db776349eda7cc10d98935359bac9d4
+context/
