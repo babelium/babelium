@@ -147,3 +147,43 @@ Five cases now on the table; time to fold them back together and try to describe
 ### A Tokenizer, It Turns Out, Defines "What Counts as Equal"
 
 Start with a claim that sounds ordinary but is illuminating from this angle: **"designing a tokenizer" is equivalent to "stipulating, over the world of the raw signal, a rule for deciding whether two pieces count as the same thing."**
+
+Start with a claim that sounds ordinary but is illuminating from this angle: **designing a tokenizer is equivalent to stipulating, over the world of the raw signal, a rule for deciding whether two pieces count as the same thing.**
+
+The claim sounds convoluted at first but unpacks plainly. What a tokenizer ultimately does is map the vast raw content (every possible string, every possible pixel arrangement) onto a finite batch of addresses (the entries in a vocabulary). That mapping is, in essence, drawing lines of equivalence across the world of raw content: whatever gets mapped to the same address is, by this rule, judged the same thing. The address set (the vocabulary) is not something given in advance; it is the result of this equivalence rule; in the field this is called a quotient, from the mathematical notion of a quotient set: partition a large set by an equivalence relation, and each resulting group becomes one element of a smaller set.
+
+The value of this view: it makes the whole theory independent of which model architecture is used. The theory only needs to talk about what the equivalence rule looks like, and that rule lives in the world of the raw signal, with no bearing on which neural network was trained on it. In other words, the theory talks about what a tokenizer does, not about how a particular tokenizers code happens to be written.
+
+### The Seven-Part Signature
+
+Gathering up the recurring elements from the five cases yields a fixed seven-part checklist. Any single continuous-discrete conversion can, in principle, be filled in against these seven slots:
+
+1. The world of raw content, plus one specially bolted-on position standing for nothing at all (this is the formal root of the register / MASK-style slots from Case E; they correspond precisely to this extra position, not to any member of the raw contents own partition).
+2. The address set, the quotient produced by the equivalence rule above.
+3. The space carrying similarity, the continuous space where embedding vectors live.
+4. The comparison function, used to measure how alike or how much two things should be grouped together: an inner product, a Euclidean distance, anything that ranks candidates without needing to be a mathematically strict metric (no requirement of symmetry or the triangle inequality).
+5. The anchor map, the representative each address corresponds to in the continuous space: in AR, each vocabulary entrys embedding vector; in VQ, each codebook entry; in attention, each key vector.
+6. The selection function, the one thing in charge of which representative this conversion ultimately picks. This is the only genuinely free part of the seven; the weight of that claim is unpacked further below.
+7. A binary flag recording whether this conversion starts from the discrete or from the continuous side, detailed in the next chapter.
+
+Together these seven make up what this article will call the conversion signature. It is not a newly invented, complicated formula; it is closer to a checklist. Facing any specific implementation of a continuous-discrete conversion, fill in the seven slots one by one; wherever a slot cannot be filled marks exactly the part of that implementation that has not yet been made explicit.
+
+The first six of the seven describe what this conversion interface looks like: how many addresses, where the anchors sit, how likeness is compared. Only the sixth, the selection function, describes what the interface does; once the other six are fixed, whether a given conversion actually happens, and which address it lands on, is still entirely undetermined until the selection function makes the call. This is why Chapter 1 singled out the word commitment: commitment is the moment the selection function is actually invoked and makes its call.
+
+With the seven-part signature in hand, Case Bs claim that commitment is not going from fuzzy to precise can be stated more precisely: what commitment really describes is selecting one representative from a batch of candidates that were, until then, left open. A tokenizer facing a string, with several legal segmentations available, is the finite-candidate case; VQ facing a continuous region with infinitely many possible landing points is the continuum case. The only difference between the two is the size of the candidate set, finite versus continuum, nothing else about what happens differs. This also means commitment need not require a continuous region to be present at all: Case Ds knowledge-graph-style retrieval and conversion purely among discrete addresses is genuine commitment too, with no continuous vector involved.
+
+### Conversion Interfaces Always Come in Pairs
+
+Once the seven-part signature is fixed, one structural fact falls out that had not been explicitly stated before: a standard language model performs not one continuous-discrete conversion but two, in opposite directions.
+
+On the input side: raw text, itself discrete characters, is cut into discrete tokens (this direction runs from discrete content toward continuous representation; the original text is discrete, and after segmentation each token is translated into a continuous embedding vector for downstream computation). On the output side: the model computes continuous scores, which must ultimately be converted into one specific, selected discrete word (the opposite direction, from continuous representation toward a discrete result).
+
+These two conversions use two entirely independent address sets. A well-known engineering practice, that the input vocabulary and output vocabulary can be set to different sizes with no coupling between them, had not previously been derived directly from this notation. Once "conversions come in pairs, running opposite directions" is recognized, this practice stops being an isolated engineering trick and becomes a direct consequence of the framework: since input and output each correspond to an independent conversion, their address sets can naturally be sized independently, with no further assumption needed to justify it.
+
+The VQ case can also be reread this way: the encoder side runs from continuous toward discrete (quantizing a continuous vector into a codebook index); the decoder side runs from discrete toward continuous (translating the index back into a codeword vector, then reconstructing the image or audio). Again, two opposite conversions forming one complete round trip.
+
+### The One Slot With Real Freedom
+
+Of the seven, only the selection function has real freedom, as noted above. Worth dwelling on, because it resurfaces in an unexpected way in Chapter 6.
+
+The other six, once a specific model architecture is fixed, are essentially fixed along with it; the size of the address set, where the anchors sit, how comparison is done, are all static parameters pinned down at design time. The selection function is different: it may deterministically pick the single top-scoring candidate (greedy decoding in AR always takes the highest score), or it may sample stochastically from a batch of candidates by probability (temperature sampling in AR, or a tokenizer randomly choosing among several legal segmentations). Randomness lives in this one place and nowhere else. This also explains a technical detail glossed over earlier: there is, in principle, such a thing as random tokenization, the same passage tokenized differently at different times, that still guarantees lossless round-tripping, provided the different segmentations correspond to non-overlapping partitions of the original content, so that whichever one gets picked, reconstruction is unaffected. The underlying mechanism is exactly this: randomness is placed in the selection function and nowhere else.
